@@ -43,11 +43,36 @@ closeHelpBtn.onclick = closeHelp;
 btnStandard.onclick = () => { currentTagFormat = 'standard'; btnStandard.className = "px-3 py-1 text-[10px] bg-slate-200 dark:bg-slate-700 text-current font-bold transition-colors"; btnModern.className = "px-3 py-1 text-[10px] hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 font-bold transition-colors"; updateFinalTag(); };
 btnModern.onclick = () => { currentTagFormat = 'modern'; btnModern.className = "px-3 py-1 text-[10px] bg-slate-200 dark:bg-slate-700 text-current font-bold transition-colors"; btnStandard.className = "px-3 py-1 text-[10px] hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 font-bold transition-colors"; updateFinalTag(); };
 
-kuromoji.builder({ dicPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict" }).build((err, _tokenizer) => {
-    if (err) return; tokenizer = _tokenizer; setupMessage.classList.add('hidden');
-    // 初期状態でも処理を走らせる（ブラウザのオートコンプリート等への対応）
-    if (targetInput.value) processText();
-});
+const DIC_PATHS = [
+    "./dict",
+    "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict",
+];
+
+function initTokenizer(paths, idx = 0) {
+    const dicPath = paths[idx];
+    setupMessage.classList.remove('hidden');
+    setupMessage.textContent = `辞書データを読み込み中... (${dicPath})`;
+
+    kuromoji.builder({ dicPath }).build((err, _tokenizer) => {
+        if (err) {
+            if (idx + 1 < paths.length) {
+                initTokenizer(paths, idx + 1);
+                return;
+            }
+            setupMessage.textContent =
+                "辞書データの読み込みに失敗しました。Cloudflare経由だと外部辞書がブロック/失敗することがあります。"
+                + " 対策: このサイトに dict フォルダを同梱して ./dict から読めるようにしてください。";
+            return;
+        }
+
+        tokenizer = _tokenizer;
+        setupMessage.classList.add('hidden');
+        // 初期状態でも処理を走らせる（ブラウザのオートコンプリート等への対応）
+        if (targetInput.value) processText();
+    });
+}
+
+initTokenizer(DIC_PATHS);
 
 function katakanaToHiragana(src) { return src.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60)); }
 const isKanjiLike = (ch) => /[\u4E00-\u9FFF]/.test(ch) || ['ヶ','ヵ','ケ','カ'].includes(ch);
