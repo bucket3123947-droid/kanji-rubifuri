@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漢字単位ルビ生成ツール</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+</head>
+<body class="py-12 px-4 relative">
+    <div class="top-nav">
+        <button id="themeBtn" class="nav-btn">
+            <svg class="sun-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 100 10 5 5 0 000-10z" />
+            </svg>
+            <svg class="moon-icon w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </button>
+        <button id="helpBtn" class="nav-btn font-bold text-xl">i</button>
+    </div>
+
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold border-b-2 border-current pb-2 mb-4 uppercase">使い方</h3>
+            <ul class="space-y-4 text-sm leading-relaxed">
+                <li class="flex gap-3">
+                    <span class="font-bold text-blue-500">1.</span>
+                    <span><strong>結合:</strong> 鎖アイコンを押し、複数の漢字を選択して1つのタグにまとめます。</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="font-bold text-red-500">2.</span>
+                    <span><strong>分解:</strong> 結合された単語をクリックし、編集画面の「ハサミボタン」で1文字ずつにバラします。</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="font-bold text-blue-500">3.</span>
+                    <span><strong>一括編集:</strong> 全てのルビのサイズや位置を一度に調整できます。</span>
+                </li>
+            </ul>
+            <button id="closeHelpBtn" class="mt-8 w-full py-3 font-bold text-xs" style="color: var(--bg); background-color: var(--text-main);">ツールを使い始める</button>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12 border-b border-current pb-4">
+            <h1 class="text-2xl font-bold">漢字に自動でルビを振るだけのサイト</h1>
+            <p class="text-sm text-gray-500 mt-1 font-normal">YMM4向けルビ振りツール</p>
+        </header>
+
+        <main class="space-y-10">
+            <div id="setupMessage" class="p-4 text-sm font-bold">
+                辞書データを読み込み中...
+            </div>
+
+            <section>
+                <div class="flex justify-between items-end mb-3">
+                    <h2 class="text-xs font-bold uppercase text-gray-400 tracking-widest">プレビュー (クリックで編集)</h2>
+                    
+                    <div class="flex gap-2 items-center">
+                        <div id="mergeControls" class="hidden flex gap-2 items-center mr-2 animate-in fade-in slide-in-from-right-2 duration-300">
+                            <button id="executeMergeBtn" class="bg-blue-600 text-white text-[10px] px-3 py-1 font-bold hover:bg-blue-700 shadow-sm">結合して確定</button>
+                            <button id="cancelMergeBtn" class="bg-gray-400 text-white text-[10px] px-3 py-1 font-bold hover:bg-gray-500 shadow-sm">キャンセル</button>
+                        </div>
+                        
+                        <button id="mergeModeBtn" title="単語結合モード" class="px-3 py-1 border border-current hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                        </button>
+                        <button id="bulkEditBtn" class="text-[10px] font-bold px-3 py-1 border border-current hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors uppercase">一括編集</button>
+                    </div>
+                </div>
+                
+                <div id="previewContainer" class="ymm4-preview-area">
+                    <div id="previewText" class="placeholder-text">入力待ち...</div>
+                    <div id="rubyWarning">※ルビが設定されていない漢字があります</div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-6">
+                <div>
+                    <h2 class="text-xs font-bold mb-3 uppercase text-gray-400 tracking-widest">入力欄</h2>
+                    <textarea id="targetText" placeholder="文章を入力してください" class="w-full p-6 text-xl h-40"></textarea>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button id="resetBtn" class="px-8 py-3 btn-outline text-sm shadow-sm">
+                        クリア
+                    </button>
+                </div>
+            </section>
+
+            <section class="pt-10 border-t border-gray-100 dark:border-slate-800">
+                <div class="flex justify-between items-end mb-3">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-xs font-bold uppercase text-gray-400 tracking-widest">Control Tags</h2>
+                        <div class="flex border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <button id="tagFormatModern" class="px-3 py-1 text-[10px] bg-slate-200 dark:bg-slate-700 text-current font-bold transition-colors">rb,</button>
+                            <button id="tagFormatStandard" class="px-3 py-1 text-[10px] hover:bg-slate-100 dark:hover:bg-slate-800 text-gray-400 font-bold transition-colors">ruby=</button>
+                        </div>
+                    </div>
+                    <button id="copyBtn" class="btn-copy px-6 py-2 text-xs font-bold">
+                        クリップボードにコピー
+                    </button>
+                </div>
+                <textarea id="resultTag" readonly class="w-full p-6 text-slate-500 dark:text-slate-400 h-32 text-sm leading-relaxed" style="background-color: var(--surface); border: 1px solid var(--border);" placeholder="タグがここに表示されます"></textarea>
+            </section>
+        </main>
+        
+        <div id="toast" class="fixed top-8 left-1/2 -translate-x-1/2 bg-black dark:bg-white text-white dark:text-black px-8 py-3 text-xs font-bold opacity-0 transition-all transform -translate-y-4 pointer-events-none z-[100]">
+            コピーしました！
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
