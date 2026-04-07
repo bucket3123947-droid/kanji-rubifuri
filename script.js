@@ -75,7 +75,9 @@ function initTokenizer(paths, idx = 0) {
 initTokenizer(DIC_PATHS);
 
 function katakanaToHiragana(src) { return src.replace(/[\u30a1-\u30f6]/g, m => String.fromCharCode(m.charCodeAt(0) - 0x60)); }
-const isKanjiLike = (ch) => /[\u4E00-\u9FFF]/.test(ch) || ['ヶ','ヵ','ケ','カ'].includes(ch);
+// 「々」(U+3005) は踊り字で、直前の漢字の繰り返しとして実質「漢字ブロック」に含めたい
+const isKanjiLike = (ch) => /[\u4E00-\u9FFF]/.test(ch) || ch === '々' || ['ヶ','ヵ','ケ','カ'].includes(ch);
+const hasKanjiLike = (s) => [...s].some(isKanjiLike);
 
 function smartSplit(surface, reading) {
     const hiraReading = katakanaToHiragana(reading);
@@ -119,7 +121,7 @@ function processText() {
     tokens.forEach(token => {
         const surface = token.surface_form;
         const reading = token.reading || surface;
-        if (/[\u4E00-\u9FFF]/.test(surface) || surface.includes('ヶ')) finalHtml += smartSplit(surface, reading).html;
+        if (hasKanjiLike(surface)) finalHtml += smartSplit(surface, reading).html;
         else finalHtml += surface;
     });
     previewText.classList.remove('placeholder-text');
