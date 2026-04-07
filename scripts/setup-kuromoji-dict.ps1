@@ -1,5 +1,5 @@
 param(
-  [string]$ProjectRoot = (Resolve-Path "$PSScriptRoot\..").Path
+  [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 )
 
 $ErrorActionPreference = "Stop"
@@ -8,22 +8,22 @@ Write-Host "ProjectRoot: $ProjectRoot"
 Set-Location $ProjectRoot
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
-  throw "npm が見つかりません。Node.js をインストールしてから再実行してください。"
+  throw "npm not found. Please install Node.js, then re-run."
 }
 
-if (-not (Test-Path "$ProjectRoot\package.json")) {
+if (-not (Test-Path (Join-Path $ProjectRoot "package.json"))) {
   npm init -y | Out-Null
 }
 
-if (-not (Test-Path "$ProjectRoot\node_modules\kuromoji")) {
+if (-not (Test-Path (Join-Path $ProjectRoot "node_modules\kuromoji"))) {
   npm install kuromoji | Out-Null
 }
 
-$src = Join-Path $ProjectRoot "node_modules\kuromoji\dict"
+$src = Join-Path (Join-Path (Join-Path $ProjectRoot "node_modules") "kuromoji") "dict"
 $dst = Join-Path $ProjectRoot "dict"
 
 if (-not (Test-Path $src)) {
-  throw "辞書フォルダが見つかりません: $src"
+  throw "Dictionary folder not found: $src"
 }
 
 if (Test-Path $dst) {
@@ -31,4 +31,4 @@ if (Test-Path $dst) {
 }
 
 Copy-Item -Recurse -Force $src $dst
-Write-Host "OK: dict を作成しました -> $dst"
+Write-Host "OK: created dict -> $dst"
