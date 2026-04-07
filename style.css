@@ -23,7 +23,7 @@ body.dark-mode {
 
 body {
     background-color: var(--bg);
-    font-family: 'Zen Maru Gothic', sans-serif;
+    font-family: var(--app-font, 'Zen Maru Gothic', sans-serif);
     color: var(--text-main);
     letter-spacing: 0.02em;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -183,6 +183,26 @@ ruby[data-reading="/"] rt {
     z-index: 10;
 }
 
+.btn-merge-primary {
+    background-color: #2563eb;
+    color: #fff;
+}
+.btn-merge-primary:hover {
+    background-color: #1d4ed8;
+}
+.btn-merge-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn-merge-cancel {
+    background-color: #64748b;
+    color: #fff;
+}
+.btn-merge-cancel:hover {
+    background-color: #475569;
+}
+
 .edit-popup {
     position: absolute;
     background: #ffffff;
@@ -212,6 +232,23 @@ body.dark-mode .edit-popup {
 
 body.dark-mode .edit-popup label {
     color: #94a3b8;
+}
+
+.modal-content #dictList {
+    max-height: 260px; /* だいたい5件分 */
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+.modal-content #dictList::-webkit-scrollbar {
+    width: 10px;
+}
+.modal-content #dictList::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.5);
+    border-radius: 999px;
+}
+.modal-content #dictList::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .edit-popup input {
@@ -287,6 +324,7 @@ body.dark-mode .edit-popup .btn-popup-cancel:hover {
     backdrop-filter: blur(4px);
     opacity: 0;
     transition: opacity 0.5s ease;
+    padding: 24px;
 }
 
 .modal-overlay.active {
@@ -302,6 +340,53 @@ body.dark-mode .edit-popup .btn-popup-cancel:hover {
     border: 2px solid var(--text-main);
     box-shadow: 8px 8px 0px var(--text-main);
     color: var(--text-main);
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+}
+
+.help-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.help-tabs button {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-main);
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.help-tabs button.active {
+    border-color: var(--text-main);
+    background: var(--text-main);
+    color: var(--bg);
+}
+
+.help-slides {
+    margin-top: 8px;
+}
+.help-slide {
+    display: none;
+}
+.help-slide.active {
+    display: block;
+}
+
+.help-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
+.help-page {
+    flex: 1;
+    text-align: center;
+    letter-spacing: 0.12em;
 }
 
 .top-nav {
